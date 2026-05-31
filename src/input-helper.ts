@@ -6,7 +6,7 @@ import * as workflowContextHelper from './workflow-context-helper'
 import {IGitSourceSettings} from './git-source-settings'
 
 export async function getInputs(): Promise<IGitSourceSettings> {
-  const result = ({} as unknown) as IGitSourceSettings
+  const result = {} as unknown as IGitSourceSettings
 
   // GitHub workspace
   let githubWorkspacePath = process.env['GITHUB_WORKSPACE']
@@ -71,7 +71,7 @@ export async function getInputs(): Promise<IGitSourceSettings> {
     }
   }
   // SHA?
-  else if (result.ref.match(/^[0-9a-fA-F]{40}$/)) {
+  else if (result.ref.match(/^(?:[0-9a-fA-F]{40}|[0-9a-fA-F]{64})$/)) {
     result.commit = result.ref
     result.ref = ''
   }
@@ -143,13 +143,15 @@ export async function getInputs(): Promise<IGitSourceSettings> {
   result.sshKnownHosts = core.getInput('ssh-known-hosts')
   result.sshStrict =
     (core.getInput('ssh-strict') || 'true').toUpperCase() === 'TRUE'
+  result.sshUser = core.getInput('ssh-user')
 
   // Persist credentials
   result.persistCredentials =
     (core.getInput('persist-credentials') || 'false').toUpperCase() === 'TRUE'
 
   // Workflow organization ID
-  result.workflowOrganizationId = await workflowContextHelper.getOrganizationId()
+  result.workflowOrganizationId =
+    await workflowContextHelper.getOrganizationId()
 
   // Set safe.directory in git global config.
   result.setSafeDirectory =
